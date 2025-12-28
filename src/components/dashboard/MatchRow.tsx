@@ -3,7 +3,6 @@ import React from "react";
 interface MatchRowProps {
   agentName: string;
   mapName: string;
-  score: string;
   roundsWon: string;
   roundsLost: string;
   kda: string;
@@ -21,7 +20,6 @@ const MatchRow = ({
   mapName,
   roundsWon,
   roundsLost,
-  score,
   kda,
   kdRatio,
   isWin,
@@ -63,9 +61,9 @@ const MatchRow = ({
       {/* MIDDLE */}
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-1 font-bold text-2xl tracking-wider leading-none">
-          <span className="w-8 text right text-[#16e5b4]">{roundsWon}</span>
+          <span className="text-[#16e5b4]">{roundsWon}</span>
           <span className="text-white">:</span>
-          <span className="w-8 text-left text-[#ff4655] transform translate-y-[1.7px]">
+          <span className="text-[#ff4655] transform translate-y-[1.7px]">
             {roundsLost}
           </span>
         </div>
