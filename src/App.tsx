@@ -1,21 +1,22 @@
 import StatCard from "./components/dashboard/StatCard";
 import MatchRow from "./components/dashboard/MatchRow"; // import the new component
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 
 interface MatchData {
-  agentName: string;
-  mapName: string;
+  agent_name: string;
+  map: string;
   score: string;
-  roundsWon: string;
-  roundsLost: string;
+  roundsWon: number;
+  roundsLost: number;
   kda: string;
-  kdRatio: string; // Added this!
-  isWin: boolean;
-  position: string;
+  kdRatio: number; // Added this!
+  result: string;
+  fmt_pos: string;
   hsPercent: number;
   adr: number;
   acs: number;
+  agent_image: string;
 }
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
         console.log("Fetching matches from Python...");
 
         // A. Go to the Grocery Store (Your API)
-        const response = await fetch("http://127.0.0.1:8000/matches");
+        const response = await fetch("http://127.0.0.1:8000/api/v1/matches/ap/f31ce9ad-d4da-53dd-a902-c3e206299a6c");
 
         // B. Check if the store is actually open
         if (!response.ok) {

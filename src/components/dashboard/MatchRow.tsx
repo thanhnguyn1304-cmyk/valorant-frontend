@@ -1,41 +1,49 @@
 import React from "react";
 
 interface MatchRowProps {
-  agentName: string;
-  mapName: string;
-  roundsWon: string;
-  roundsLost: string;
+  agent_name: string;
+  map: string;
+  roundsWon: number;
+  roundsLost: number;
   kda: string;
-  kdRatio: string; // Added this!
-  isWin: boolean;
-  position: string;
+  kdRatio: number; // Added this!
+  result: string;
+  fmt_pos: string;
   hsPercent: number;
   adr: number;
   acs: number;
+  agent_image: string;
 }
 
 // MAKE SURE ALL THESE ARE INSIDE THE { }
 const MatchRow = ({
-  agentName,
-  mapName,
+  agent_name,
+  map,
   roundsWon,
   roundsLost,
   kda,
   kdRatio,
-  isWin,
-  position,
+  result,
+  fmt_pos,
   hsPercent,
   adr,
   acs,
+  agent_image
 }: MatchRowProps) => {
-  const borderColor = isWin ? "border-[#16e5b4]" : "border-[#ff4655]";
+  const getBorderColor = (res: string) => {
+    if (res === "win") return "border-[#5EE790]";
+    if (res === "lose") return "border-[#E4485D]";
+    if (res === "draw") return "border-[#CBB765]";
+    return "border-gray-500";
+  }
+  const borderColor = getBorderColor(result);
   const getPositionStyles = (pos: string) => {
     if (pos === "MVP") return "bg-[#cbb765] text-[#000000]";
     if (pos === "2nd") return "bg-[#99B0CC] text-[#000000]";
     if (pos === "3rd") return "bg-[#A86243] text-[#000000]";
     return "bg-[#2C3F52] text-[#99ABBF]";
   };
-  const positionStyles = getPositionStyles(position);
+  const positionStyles = getPositionStyles(fmt_pos);
 
   return (
     <div
@@ -47,13 +55,15 @@ const MatchRow = ({
     >
       {/* LEFT SIDE */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-gray-600 rounded-md shrink-0"></div>
+        <div className="w-12 h-12 rounded-md shrink-0">
+          <img src ={agent_image} alt={agent_name} className="w-full h-full object-cover rounded-md" />
+        </div>
         <div className="flex flex-col justify-center">
           <span className="text-white font-bold text-lg leading-tight">
-            {mapName}
+            {map}
           </span>
           <span className="text-gray-400 text-xs uppercase tracking-wide">
-            {agentName}
+            {agent_name}
           </span>
         </div>
       </div>
@@ -72,7 +82,7 @@ const MatchRow = ({
           <span
             className={`w-12 h-5 flex items-center justify-center rounded-full ${positionStyles}`}
           >
-            {position}
+            {fmt_pos}
           </span>
         </div>
       </div>
