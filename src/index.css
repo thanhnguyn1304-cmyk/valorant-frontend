@@ -83,6 +83,16 @@
   ::-webkit-scrollbar-thumb:hover {
     background: var(--surface-400);
   }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* --- Component Styles --- */
@@ -158,6 +168,16 @@
 
   .badge-position {
     @apply bg-surface-300 text-text-secondary;
+  }
+
+  .badge-2nd {
+    background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+    color: #1a1a1a;
+  }
+
+  .badge-3rd {
+    background: linear-gradient(135deg, #CD7F32, #B87333);
+    color: #1a1a1a;
   }
 
   /* Buttons */

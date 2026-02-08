@@ -17,7 +17,11 @@ interface MatchData {
     hsPercent: number;
     adr: number;
     acs: number;
-    start_time?: string;
+    start_time?: string | number | Date;
+    kills?: number;
+    deaths?: number;
+    assists?: number;
+    rounds_played?: number;
 }
 
 interface ProfileDashboardProps {
@@ -28,6 +32,40 @@ interface ProfileDashboardProps {
     onBack: () => void;
     onMatchClick?: (matchId: string) => void;
 }
+
+// Helper function to calculate time ago from start_time
+const getTimeAgo = (startTime?: string | number | Date): string => {
+    if (!startTime) return 'Unknown';
+
+    try {
+        // Handle different date formats from backend
+        let matchDate: Date;
+        if (typeof startTime === 'string') {
+            matchDate = new Date(startTime);
+        } else if (typeof startTime === 'number') {
+            // Could be Unix timestamp in seconds or milliseconds
+            matchDate = startTime > 1e12 ? new Date(startTime) : new Date(startTime * 1000);
+        } else {
+            matchDate = startTime;
+        }
+
+        // Check if valid date
+        if (isNaN(matchDate.getTime())) return 'Unknown';
+
+        const now = new Date();
+        const diffMs = now.getTime() - matchDate.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffHours < 1) return 'Just now';
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return `${Math.floor(diffDays / 7)}w ago`;
+    } catch {
+        return 'Unknown';
+    }
+};
 
 const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMatchClick }: ProfileDashboardProps) => {
     // Calculate aggregate stats from matches
@@ -50,7 +88,7 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
         }
 
         const wins = matches.filter(m => m.result === 'win').length;
-        const losses = matches.filter(m => m.result === 'loss').length;
+        const losses = matches.filter(m => m.result === 'lose' || m.result === 'loss').length;
         const mvpCount = matches.filter(m => m.fmt_pos === 'MVP').length;
         const totalKD = matches.reduce((acc, m) => acc + Number(m.kdRatio), 0);
         const totalHS = matches.reduce((acc, m) => acc + m.hsPercent, 0);
@@ -89,8 +127,30 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
         const groups: { [key: string]: MatchData[] } = {};
 
         matches.forEach(match => {
-            // Just use "Recent" for now since we don't have proper date parsing
-            const dateKey = 'Recent Matches';
+            let dateKey = 'Unknown Date';
+
+            if (match.start_time) {
+                try {
+                    let matchDate: Date;
+                    if (typeof match.start_time === 'string') {
+                        matchDate = new Date(match.start_time);
+                    } else if (typeof match.start_time === 'number') {
+                        // Unix timestamp - could be seconds or milliseconds
+                        matchDate = match.start_time > 1e12 ? new Date(match.start_time) : new Date(match.start_time * 1000);
+                    } else {
+                        matchDate = match.start_time;
+                    }
+
+                    if (!isNaN(matchDate.getTime())) {
+                        // Format as "Feb 8" style
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        dateKey = `${months[matchDate.getMonth()]} ${matchDate.getDate()}`;
+                    }
+                } catch {
+                    dateKey = 'Unknown Date';
+                }
+            }
+
             if (!groups[dateKey]) {
                 groups[dateKey] = [];
             }
@@ -106,8 +166,16 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
         <div className="min-h-screen bg-surface">
             {/* Header Banner */}
             <div className="relative h-48 bg-gradient-to-r from-surface-100 via-surface-200 to-surface-100 overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
+                {/* Valorant Background Image */}
+                <img
+                    src="/images/valorant-banner.jpg"
+                    alt="Valorant Background"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50"
+                />
+                {/* Dark overlay for readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent" />
+                {/* Accent glow */}
+                <div className="absolute inset-0 opacity-20">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-val rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
                 </div>
 
@@ -124,8 +192,22 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
 
                 {/* Player Info */}
                 <div className="absolute bottom-6 left-6 flex items-end gap-4">
-                    <div className="w-24 h-24 rounded-xl bg-surface-300 border-4 border-surface flex items-center justify-center">
-                        <User className="w-12 h-12 text-text-tertiary" />
+                    <div className="w-24 h-24 rounded-xl bg-surface-300 border-4 border-surface flex items-center justify-center overflow-hidden">
+                        {matches.length >= 3 ? (
+                            <img
+                                src={matches[2].agent_image}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : matches.length > 0 ? (
+                            <img
+                                src={matches[0].agent_image}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <User className="w-12 h-12 text-text-tertiary" />
+                        )}
                     </div>
                     <div className="pb-1">
                         <h1 className="text-3xl font-bold text-text-primary">{playerName || 'Player'}</h1>
@@ -155,7 +237,7 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="w-full px-6 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Stats Overview */}
                     <div className="lg:col-span-1 space-y-6">
@@ -187,12 +269,12 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
-                                <StatItem label="K/D Ratio" value={stats.avgKD} highlight={Number(stats.avgKD) >= 1} />
-                                <StatItem label="Headshot %" value={`${stats.avgHS}%`} highlight={stats.avgHS >= 25} />
+                                <StatItem label="K/D Ratio" value={stats.avgKD} />
+                                <StatItem label="Headshot %" value={`${stats.avgHS}%`} />
                                 <StatItem label="ADR" value={stats.avgADR.toString()} />
                                 <StatItem label="ACS" value={stats.avgACS.toString()} />
                                 <StatItem label="Total Kills" value={stats.totalKills.toString()} />
-                                <StatItem label="MVPs" value={stats.mvpCount.toString()} highlight={stats.mvpCount > 0} />
+                                <StatItem label="MVPs" value={stats.mvpCount.toString()} />
                             </div>
                         </motion.div>
 
@@ -205,9 +287,9 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
                         >
                             <h2 className="text-lg font-bold text-text-primary mb-4">Performance</h2>
                             <div className="space-y-4">
-                                <PerformanceBar label="K/D" value={Number(stats.avgKD)} max={3} color="val" />
-                                <PerformanceBar label="HS%" value={stats.avgHS} max={50} color="success" />
-                                <PerformanceBar label="ADR" value={stats.avgADR} max={200} color="val" />
+                                <PerformanceBar label="K/D" value={Number(stats.avgKD)} max={3} />
+                                <PerformanceBar label="HS%" value={stats.avgHS} max={50} />
+                                <PerformanceBar label="ADR" value={stats.avgADR} max={200} />
                             </div>
                         </motion.div>
                     </div>
@@ -220,23 +302,66 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
                             transition={{ delay: 0.2 }}
                         >
                             {/* Recent Scores Preview */}
-                            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+                            <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-3 pt-2 scrollbar-hide">
                                 {matches.slice(0, 8).map((match, index) => (
-                                    <div
+                                    <motion.div
                                         key={match.id}
-                                        className={`flex-shrink-0 px-3 py-2 rounded-lg text-center ${match.result === 'win'
-                                            ? 'bg-success/10 border border-success/20'
-                                            : 'bg-loss/10 border border-loss/20'
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        whileHover={{ scale: 1.02, y: -2 }}
+                                        className={`flex-shrink-0 relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 ${match.result === 'win'
+                                            ? 'bg-gradient-to-br from-success/20 via-success/10 to-transparent border border-success/30 hover:border-success/50'
+                                            : 'bg-gradient-to-br from-loss/20 via-loss/10 to-transparent border border-loss/30 hover:border-loss/50'
                                             }`}
+                                        style={{ minWidth: '140px' }}
                                     >
-                                        <div className="text-text-tertiary text-xs mb-1">
-                                            {index === 0 ? 'Latest' : `${index + 1} ago`}
+                                        {/* Glow effect */}
+                                        <div className={`absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 ${match.result === 'win' ? 'bg-success/5' : 'bg-loss/5'
+                                            }`} />
+
+                                        <div className="relative p-3">
+                                            {/* Time badge */}
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${index === 0
+                                                    ? 'bg-val/20 text-val'
+                                                    : 'bg-surface-300 text-text-tertiary'
+                                                    }`}>
+                                                    {index === 0 ? 'LATEST' : getTimeAgo(match.start_time)}
+                                                </span>
+                                            </div>
+
+                                            {/* Agent + Score row */}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className="w-8 h-8 rounded-lg overflow-hidden bg-surface-300 flex-shrink-0">
+                                                    <img
+                                                        src={match.agent_image}
+                                                        alt={match.agent_name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div className={`text-xl font-bold ${match.result === 'win' ? 'text-success' : 'text-loss'}`}>
+                                                    {match.roundsWon}
+                                                    <span className="text-text-muted mx-0.5">:</span>
+                                                    {match.roundsLost}
+                                                </div>
+                                            </div>
+
+                                            {/* Map name */}
+                                            <div className="text-text-secondary text-xs font-medium mb-1">{match.map}</div>
+
+                                            {/* Stats row */}
+                                            <div className="flex items-center gap-3 text-[11px]">
+                                                <span className={`font-semibold ${Number(match.kdRatio) > 1 ? 'text-success' :
+                                                    Number(match.kdRatio) < 1 ? 'text-loss' : 'text-text-primary'
+                                                    }`}>
+                                                    {match.kdRatio} KD
+                                                </span>
+                                                <span className="text-text-muted">•</span>
+                                                <span className="text-text-primary">{match.acs} ACS</span>
+                                            </div>
                                         </div>
-                                        <div className={`text-lg font-bold ${match.result === 'win' ? 'text-success' : 'text-loss'}`}>
-                                            {match.roundsWon}:{match.roundsLost}
-                                        </div>
-                                        <div className="text-text-tertiary text-xs">K/D {match.kdRatio}</div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
 
@@ -254,25 +379,72 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    {Object.entries(groupedMatches).map(([date, dateMatches]) => (
-                                        <div key={date}>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h3 className="text-sm font-medium text-text-secondary">{date}</h3>
-                                                <span className="text-xs text-text-tertiary">
-                                                    {dateMatches.filter(m => m.result === 'win').length}W / {dateMatches.filter(m => m.result === 'loss').length}L
-                                                </span>
+                                    {Object.entries(groupedMatches).map(([date, dateMatches]) => {
+                                        // Calculate daily stats
+                                        const wins = dateMatches.filter(m => m.result === 'win').length;
+                                        const losses = dateMatches.filter(m => m.result === 'lose' || m.result === 'loss').length;
+
+                                        const avgKD = (dateMatches.reduce((sum, m) => sum + Number(m.kdRatio || 0), 0) / dateMatches.length).toFixed(2);
+                                        const avgHS = Math.round(dateMatches.reduce((sum, m) => sum + (m.hsPercent || 0), 0) / dateMatches.length);
+                                        const avgADR = Math.round(dateMatches.reduce((sum, m) => sum + (m.adr || 0), 0) / dateMatches.length);
+                                        const avgACS = Math.round(dateMatches.reduce((sum, m) => sum + (m.acs || 0), 0) / dateMatches.length);
+
+                                        return (
+                                            <div key={date}>
+                                                {/* Date Summary Header - aligned with match rows */}
+                                                <div className="flex items-center gap-8 p-4 mb-2 bg-surface-200 rounded-lg border border-surface-300">
+                                                    {/* Left side - matches match row left section widths */}
+                                                    <div className="w-12 flex-shrink-0 flex items-center justify-center">
+                                                        <span className="text-lg font-bold text-text-primary">{dateMatches.length}</span>
+                                                    </div>
+                                                    <div className="flex-shrink-0 min-w-[100px]">
+                                                        <div className="text-text-primary font-bold">{date}</div>
+                                                        <div className="text-text-tertiary text-xs">Matches</div>
+                                                    </div>
+                                                    <div className="flex-shrink-0 min-w-[100px]">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-success font-bold">{wins}W</span>
+                                                            <span className="text-text-muted">//</span>
+                                                            <span className="text-loss font-bold">{losses}L</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Stats - aligned with match row stats */}
+                                                    <div className="flex items-center justify-end gap-6 ml-auto">
+                                                        <div className="text-center w-[60px]">
+                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">K/D</div>
+                                                            <div className={`font-bold ${Number(avgKD) > 1 ? 'text-success' : Number(avgKD) < 1 ? 'text-loss' : 'text-text-primary'}`}>
+                                                                {avgKD}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-center w-[60px]">
+                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">HS%</div>
+                                                            <div className="font-bold text-text-primary">{avgHS}%</div>
+                                                        </div>
+                                                        <div className="text-center w-[60px]">
+                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">ADR</div>
+                                                            <div className="font-bold text-text-primary">{avgADR}</div>
+                                                        </div>
+                                                        <div className="text-center w-[60px]">
+                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">ACS</div>
+                                                            <div className="font-bold text-text-primary">{avgACS}</div>
+                                                        </div>
+                                                    </div>
+                                                    {/* Spacer for arrow */}
+                                                    <div className="w-5 flex-shrink-0" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {dateMatches.map((match) => (
+                                                        <MatchHistoryCard
+                                                            key={match.id}
+                                                            {...match}
+                                                            onClick={() => onMatchClick?.(match.match_id || String(match.id))}
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                {dateMatches.map((match) => (
-                                                    <MatchHistoryCard
-                                                        key={match.id}
-                                                        {...match}
-                                                        onClick={() => onMatchClick?.(match.match_id || String(match.id))}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </motion.div>
@@ -287,13 +459,12 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
 interface StatItemProps {
     label: string;
     value: string;
-    highlight?: boolean;
 }
 
-const StatItem = ({ label, value, highlight = false }: StatItemProps) => (
+const StatItem = ({ label, value }: StatItemProps) => (
     <div className="bg-surface-200 rounded-lg p-3">
         <div className="text-text-tertiary text-xs uppercase tracking-wider mb-1">{label}</div>
-        <div className={`text-xl font-bold ${highlight ? 'text-val' : 'text-text-primary'}`}>{value}</div>
+        <div className="text-xl font-bold text-text-primary">{value}</div>
     </div>
 );
 
@@ -302,12 +473,10 @@ interface PerformanceBarProps {
     label: string;
     value: number;
     max: number;
-    color: 'val' | 'success';
 }
 
-const PerformanceBar = ({ label, value, max, color }: PerformanceBarProps) => {
+const PerformanceBar = ({ label, value, max }: PerformanceBarProps) => {
     const percentage = Math.min((value / max) * 100, 100);
-    const colorClasses = color === 'val' ? 'bg-val' : 'bg-success';
 
     return (
         <div>
@@ -317,7 +486,7 @@ const PerformanceBar = ({ label, value, max, color }: PerformanceBarProps) => {
             </div>
             <div className="h-2 bg-surface-300 rounded-full overflow-hidden">
                 <div
-                    className={`h-full ${colorClasses} rounded-full transition-all duration-500`}
+                    className="h-full bg-text-secondary rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                 />
             </div>

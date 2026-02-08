@@ -18,7 +18,11 @@ interface MatchData {
   hsPercent: number;
   adr: number;
   acs: number;
-  start_time?: string;
+  start_time?: string | number | Date;
+  kills?: number;
+  deaths?: number;
+  assists?: number;
+  rounds_played?: number;
 }
 
 interface PlayerInfo {
