@@ -163,21 +163,25 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
     const groupedMatches = groupMatchesByDate(matches);
 
     return (
-        <div className="min-h-screen bg-surface">
+        <div className="min-h-screen relative bg-surface">
+            {/* Global Background */}
+            <div className="fixed inset-0 z-0">
+                <img
+                    src="/images/hero-background.jpg"
+                    alt=""
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-surface/95" />
+            </div>
+
             {/* Header Banner */}
-            <div className="relative h-48 bg-gradient-to-r from-surface-100 via-surface-200 to-surface-100 overflow-hidden">
-                {/* Valorant Background Image */}
+            <div className="relative z-10 h-48 bg-gradient-to-r from-surface-100 via-surface-200 to-surface-100 overflow-hidden">
                 <img
                     src="/images/valorant-banner.jpg"
                     alt="Valorant Background"
-                    className="absolute inset-0 w-full h-full object-cover opacity-50"
+                    className="absolute inset-0 w-full h-full object-cover opacity-30"
                 />
-                {/* Dark overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent" />
-                {/* Accent glow */}
-                <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-val rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                </div>
+                <div className="absolute inset-0 bg-surface/40" />
 
                 {/* Back Button */}
                 <motion.button
@@ -217,7 +221,7 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
             </div>
 
             {/* Navigation Tabs */}
-            <div className="border-b border-surface-300 bg-surface-100">
+            <div className="relative z-10 border-b border-surface-300 bg-surface-100/95 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto px-6">
                     <nav className="flex gap-1">
                         <button className="px-4 py-3 text-sm font-medium text-val border-b-2 border-val">
@@ -237,7 +241,7 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
             </div>
 
             {/* Main Content */}
-            <div className="w-full px-6 py-8">
+            <div className="relative z-10 w-full px-6 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Stats Overview */}
                     <div className="lg:col-span-1 space-y-6">
