@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, User } from 'lucide-react';
 import MatchHistoryCard from './MatchHistoryCard';
+import CoachReport from './CoachReport';
 
 interface MatchData {
     id: number;
@@ -382,73 +383,89 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
                                     <p className="text-text-secondary">No matches found for this player.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
-                                    {Object.entries(groupedMatches).map(([date, dateMatches]) => {
-                                        // Calculate daily stats
-                                        const wins = dateMatches.filter(m => m.result === 'win').length;
-                                        const losses = dateMatches.filter(m => m.result === 'lose' || m.result === 'loss').length;
+                                <div className="space-y-8">
+                                    {/* AI Coach Report */}
+                                    <div className="mb-8">
+                                        <CoachReport puuid={puuid} />
+                                    </div>
 
-                                        const avgKD = (dateMatches.reduce((sum, m) => sum + Number(m.kdRatio || 0), 0) / dateMatches.length).toFixed(2);
-                                        const avgHS = Math.round(dateMatches.reduce((sum, m) => sum + (m.hsPercent || 0), 0) / dateMatches.length);
-                                        const avgADR = Math.round(dateMatches.reduce((sum, m) => sum + (m.adr || 0), 0) / dateMatches.length);
-                                        const avgACS = Math.round(dateMatches.reduce((sum, m) => sum + (m.acs || 0), 0) / dateMatches.length);
+                                    <div className="space-y-6">
+                                        {Object.entries(groupedMatches).map(([date, dateMatches]) => {
+                                            // Calculate daily stats
+                                            const wins = dateMatches.filter(m => m.result === 'win').length;
+                                            const losses = dateMatches.filter(m => m.result === 'lose' || m.result === 'loss').length;
 
-                                        return (
-                                            <div key={date}>
-                                                {/* Date Summary Header - aligned with match rows */}
-                                                <div className="flex items-center gap-8 p-4 mb-2 bg-surface-200 rounded-lg border border-surface-300">
-                                                    {/* Left side - matches match row left section widths */}
-                                                    <div className="w-12 flex-shrink-0 flex items-center justify-center">
-                                                        <span className="text-lg font-bold text-text-primary">{dateMatches.length}</span>
-                                                    </div>
-                                                    <div className="flex-shrink-0 min-w-[100px]">
-                                                        <div className="text-text-primary font-bold">{date}</div>
-                                                        <div className="text-text-tertiary text-xs">Matches</div>
-                                                    </div>
-                                                    <div className="flex-shrink-0 min-w-[100px]">
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="text-success font-bold">{wins}W</span>
-                                                            <span className="text-text-muted">//</span>
-                                                            <span className="text-loss font-bold">{losses}L</span>
+                                            const avgKD = (dateMatches.reduce((sum, m) => sum + Number(m.kdRatio || 0), 0) / dateMatches.length).toFixed(2);
+                                            const avgHS = Math.round(dateMatches.reduce((sum, m) => sum + (m.hsPercent || 0), 0) / dateMatches.length);
+                                            const avgADR = Math.round(dateMatches.reduce((sum, m) => sum + (m.adr || 0), 0) / dateMatches.length);
+                                            const avgACS = Math.round(dateMatches.reduce((sum, m) => sum + (m.acs || 0), 0) / dateMatches.length);
+
+                                            return (
+                                                <div key={date}>
+                                                    {/* Date Summary Header - aligned with match rows */}
+                                                    <div className="flex items-center gap-8 p-4 mb-2 bg-surface-200 rounded-r-lg border border-surface-300 border-l-4 border-l-transparent">
+                                                        {/* Agent icon placeholder - matches w-14 in match row */}
+                                                        <div className="w-14 flex-shrink-0 flex items-center justify-center">
+                                                            <span className="text-2xl font-bold text-text-primary">{dateMatches.length}</span>
                                                         </div>
-                                                    </div>
-
-                                                    {/* Stats - aligned with match row stats */}
-                                                    <div className="flex items-center justify-end gap-6 ml-auto">
-                                                        <div className="text-center w-[60px]">
-                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">K/D</div>
-                                                            <div className={`font-bold ${Number(avgKD) > 1 ? 'text-success' : Number(avgKD) < 1 ? 'text-loss' : 'text-text-primary'}`}>
-                                                                {avgKD}
+                                                        {/* Map info placeholder - matches w-32 ml-2 in match row */}
+                                                        <div className="flex-shrink-0 w-32 ml-2">
+                                                            <div className="text-text-primary font-bold text-lg">{date}</div>
+                                                            <div className="text-text-tertiary text-xs">Matches</div>
+                                                        </div>
+                                                        {/* Rank icon spacer - matches w-14 in match row */}
+                                                        <div className="flex-shrink-0 w-14" />
+                                                        {/* W/L aligned to score column - matches w-36 in match row */}
+                                                        <div className="flex-shrink-0 w-36 flex items-center justify-center">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-success font-black text-2xl">{wins}W</span>
+                                                                <span className="text-text-muted text-xl">//</span>
+                                                                <span className="text-loss font-black text-2xl">{losses}L</span>
                                                             </div>
                                                         </div>
-                                                        <div className="text-center w-[60px]">
-                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">HS%</div>
-                                                            <div className="font-bold text-text-primary">{avgHS}%</div>
+                                                        {/* Result badge spacer - matches w-28 ml-8 in match row */}
+                                                        <div className="flex-shrink-0 w-28 ml-8" />
+
+                                                        {/* Spacer to push stats right */}
+                                                        <div className="flex-1" />
+
+                                                        {/* Stats - aligned with match row stats */}
+                                                        <div className="flex items-center justify-end gap-2 flex-shrink-0 pr-4">
+                                                            <div className="text-center w-[80px]">
+                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">K/D</div>
+                                                                <div className={`text-xl font-black ${Number(avgKD) > 1 ? 'text-success' : Number(avgKD) < 1 ? 'text-loss' : 'text-text-primary'}`}>
+                                                                    {avgKD}
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-center w-[80px]">
+                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">HS%</div>
+                                                                <div className="text-xl font-black text-text-primary">{avgHS}%</div>
+                                                            </div>
+                                                            <div className="text-center w-[80px] hidden xl:block">
+                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">ADR</div>
+                                                                <div className="text-xl font-black text-text-primary">{avgADR}</div>
+                                                            </div>
+                                                            <div className="text-center w-[80px]">
+                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">ACS</div>
+                                                                <div className="text-xl font-black text-text-primary">{avgACS}</div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-center w-[60px]">
-                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">ADR</div>
-                                                            <div className="font-bold text-text-primary">{avgADR}</div>
-                                                        </div>
-                                                        <div className="text-center w-[60px]">
-                                                            <div className="text-text-tertiary text-xs uppercase tracking-wider">ACS</div>
-                                                            <div className="font-bold text-text-primary">{avgACS}</div>
-                                                        </div>
+                                                        {/* Spacer for arrow */}
+                                                        <div className="w-5 flex-shrink-0" />
                                                     </div>
-                                                    {/* Spacer for arrow */}
-                                                    <div className="w-5 flex-shrink-0" />
+                                                    <div className="space-y-2">
+                                                        {dateMatches.map((match) => (
+                                                            <MatchHistoryCard
+                                                                key={match.id}
+                                                                {...match}
+                                                                onClick={() => onMatchClick?.(match.match_id || String(match.id))}
+                                                            />
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    {dateMatches.map((match) => (
-                                                        <MatchHistoryCard
-                                                            key={match.id}
-                                                            {...match}
-                                                            onClick={() => onMatchClick?.(match.match_id || String(match.id))}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </motion.div>

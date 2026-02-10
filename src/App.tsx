@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from './config';
 import HeroSection from './components/HeroSection';
 import ProfileDashboard from './components/ProfileDashboard';
 import MatchDetail from './components/MatchDetail';
@@ -60,7 +61,7 @@ function App() {
     try {
       // Step 1: Get PUUID from Riot ID and Tagline
       console.log(`Looking up player: ${riotId}#${tagline}`);
-      const playerResponse = await fetch(`http://127.0.0.1:8000/api/v1/players/${riotId}/${tagline}`);
+      const playerResponse = await fetch(`${API_BASE_URL}/api/v1/players/${encodeURIComponent(riotId)}/${encodeURIComponent(tagline)}`);
 
       if (!playerResponse.ok) {
         throw new Error('Player not found. Please check your Riot ID and Tagline.');
@@ -86,9 +87,9 @@ function App() {
   };
 
   const handleBack = () => {
-    if (currentView === 'matchDetail') {
-      setCurrentView('profile');
+    if (selectedMatch || isMatchLoading) {
       setSelectedMatch(null);
+      setIsMatchLoading(false);
     } else {
       setCurrentView('landing');
       setMatches([]);
@@ -99,11 +100,11 @@ function App() {
 
   const handleMatchClick = async (matchId: string) => {
     setIsMatchLoading(true);
-    setCurrentView('matchDetail');
+    setSelectedMatch(null);
 
     try {
       console.log('Fetching match details for:', matchId);
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/matches/${matchId}`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/matches/${matchId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch match: ${response.status}`);
@@ -127,7 +128,7 @@ function App() {
         setIsLoading(true);
         try {
           console.log('Fetching matches for:', playerInfo.region, playerInfo.puuid);
-          const response = await fetch(`http://127.0.0.1:8000/api/v1/matches/${playerInfo.region}/${playerInfo.puuid}`);
+          const response = await fetch(`${API_BASE_URL}/api/v1/matches/${playerInfo.region}/${playerInfo.puuid}`);
 
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -176,7 +177,8 @@ function App() {
         />
       )}
 
-      {currentView === 'matchDetail' && (
+      {/* Match Detail Modal Overlay */}
+      {(selectedMatch || isMatchLoading) && (
         <MatchDetail
           match={selectedMatch}
           isLoading={isMatchLoading}

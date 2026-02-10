@@ -1,5 +1,7 @@
-import { motion } from 'framer-motion';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { useEffect } from 'react';
+import { API_BASE_URL } from '../config';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Trophy } from 'lucide-react';
 
 interface PlayerData {
     puuid: string;
@@ -8,6 +10,8 @@ interface PlayerData {
     agent_name: string;
     agent_image: string;
     team_id: string;
+    current_rank: string;
+    current_rank_image: string;
     kills: number;
     deaths: number;
     assists: number;
@@ -44,31 +48,24 @@ interface MatchDetailProps {
 }
 
 const MatchDetail = ({ match, isLoading, onBack, currentPuuid }: MatchDetailProps) => {
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full border-2 border-val border-t-transparent animate-spin" />
-                    <span className="text-text-secondary">Loading match details...</span>
-                </div>
-            </div>
-        );
-    }
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
 
-    if (!match) {
-        return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-text-secondary mb-4">Match not found</p>
-                    <button onClick={onBack} className="btn-primary">Go Back</button>
-                </div>
-            </div>
-        );
-    }
+    // Close on Escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onBack();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [onBack]);
 
     // Separate teams
-    const blueTeam = match.participations.filter(p => p.team_id === 'Blue').sort((a, b) => a.position - b.position);
-    const redTeam = match.participations.filter(p => p.team_id === 'Red').sort((a, b) => a.position - b.position);
+    const blueTeam = match?.participations?.filter(p => p.team_id === 'Blue').sort((a, b) => a.position - b.position) || [];
+    const redTeam = match?.participations?.filter(p => p.team_id === 'Red').sort((a, b) => a.position - b.position) || [];
 
     const formatDuration = (ms: number) => {
         const minutes = Math.floor(ms / 60000);
@@ -77,78 +74,119 @@ const MatchDetail = ({ match, isLoading, onBack, currentPuuid }: MatchDetailProp
     };
 
     return (
-        <div className="min-h-screen bg-surface">
-            {/* Header */}
-            <div className="bg-surface-100 border-b border-surface-300">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <motion.button
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors mb-4"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span className="text-sm font-medium">Back to Profile</span>
-                    </motion.button>
+        <AnimatePresence>
+            {/* Backdrop */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center"
+            >
+                {/* Dark overlay - click to close */}
+                <div
+                    className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                    onClick={onBack}
+                />
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between"
-                    >
-                        <div>
-                            <h1 className="text-2xl font-bold text-text-primary">{match.map_name}</h1>
-                            <p className="text-text-tertiary text-sm">
-                                {formatDuration(match.duration_ms)} • {match.rounds_play} Rounds
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <div className="text-text-tertiary text-xs uppercase">Winner</div>
-                                <div className={`text-lg font-bold ${match.winning_team === 'Blue' ? 'text-blue-400' : 'text-val'}`}>
-                                    {match.winning_team} Team
+                {/* Modal Content */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 40, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="relative z-10 w-[95vw] max-w-6xl max-h-[90vh] bg-surface-100 rounded-2xl border border-surface-300 shadow-2xl overflow-hidden flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between px-6 py-4 bg-surface-200 border-b border-surface-300 flex-shrink-0">
+                        {isLoading ? (
+                            <div className="flex items-center gap-3">
+                                <div className="w-5 h-5 rounded-full border-2 border-val border-t-transparent animate-spin" />
+                                <span className="text-text-secondary text-sm">Loading match details...</span>
+                            </div>
+                        ) : match ? (
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <h2 className="text-xl font-bold text-text-primary">{match.map_name}</h2>
+                                    <p className="text-text-tertiary text-sm">
+                                        {formatDuration(match.duration_ms)} • {match.rounds_play} Rounds
+                                    </p>
+                                </div>
+                                <div className="ml-4 text-right">
+                                    <div className="text-text-tertiary text-xs uppercase">Winner</div>
+                                    <div className={`text-lg font-bold ${match.winning_team === 'Blue' ? 'text-blue-400' : 'text-val'}`}>
+                                        {match.winning_team} Team
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
+                        ) : (
+                            <span className="text-text-secondary">Match not found</span>
+                        )}
 
-            {/* Scoreboard */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Blue Team */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-3 h-3 rounded-full bg-blue-400" />
-                        <h2 className="text-lg font-bold text-text-primary">Blue Team</h2>
-                        <span className={`badge ${blueTeam[0]?.result === 'win' ? 'badge-win' : 'badge-loss'}`}>
-                            {blueTeam[0]?.result === 'win' ? 'VICTORY' : 'DEFEAT'}
-                        </span>
+                        {/* Close Button */}
+                        <button
+                            onClick={onBack}
+                            className="p-2 rounded-lg hover:bg-surface-300 transition-colors text-text-secondary hover:text-text-primary"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <TeamTable players={blueTeam} currentPuuid={currentPuuid} teamColor="blue" />
-                </motion.div>
 
-                {/* Red Team */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-3 h-3 rounded-full bg-val" />
-                        <h2 className="text-lg font-bold text-text-primary">Red Team</h2>
-                        <span className={`badge ${redTeam[0]?.result === 'win' ? 'badge-win' : 'badge-loss'}`}>
-                            {redTeam[0]?.result === 'win' ? 'VICTORY' : 'DEFEAT'}
-                        </span>
+                    {/* Scrollable Body */}
+                    <div className="overflow-y-auto flex-1 p-6">
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full border-2 border-val border-t-transparent animate-spin" />
+                                    <span className="text-text-secondary">Loading match details...</span>
+                                </div>
+                            </div>
+                        ) : !match ? (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="text-center">
+                                    <p className="text-text-secondary mb-4">Match not found</p>
+                                    <button onClick={onBack} className="btn-primary">Close</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Blue Team */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-8"
+                                >
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-3 h-3 rounded-full bg-blue-400" />
+                                        <h2 className="text-lg font-bold text-text-primary">Blue Team</h2>
+                                        <span className={`badge ${blueTeam[0]?.result === 'win' ? 'badge-win' : 'badge-loss'}`}>
+                                            {blueTeam[0]?.result === 'win' ? 'VICTORY' : 'DEFEAT'}
+                                        </span>
+                                    </div>
+                                    <TeamTable players={blueTeam} currentPuuid={currentPuuid} teamColor="blue" />
+                                </motion.div>
+
+                                {/* Red Team */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                >
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-3 h-3 rounded-full bg-val" />
+                                        <h2 className="text-lg font-bold text-text-primary">Red Team</h2>
+                                        <span className={`badge ${redTeam[0]?.result === 'win' ? 'badge-win' : 'badge-loss'}`}>
+                                            {redTeam[0]?.result === 'win' ? 'VICTORY' : 'DEFEAT'}
+                                        </span>
+                                    </div>
+                                    <TeamTable players={redTeam} currentPuuid={currentPuuid} teamColor="red" />
+                                </motion.div>
+                            </>
+                        )}
                     </div>
-                    <TeamTable players={redTeam} currentPuuid={currentPuuid} teamColor="red" />
                 </motion.div>
-            </div>
-        </div>
+            </motion.div>
+        </AnimatePresence>
     );
 };
 
@@ -219,10 +257,22 @@ const TeamTable = ({ players, currentPuuid, teamColor }: TeamTableProps) => {
                             </div>
                         </div>
 
-                        {/* Position/Rank */}
-                        <div className="text-center">
-                            <span className={`badge ${pos === 'MVP' ? 'badge-mvp' : 'badge-position'}`}>
-                                {pos}
+                        {/* Rank */}
+                        <div className="flex items-center justify-center">
+                            {player.current_rank_image ? (
+                                <img
+                                    src={`${API_BASE_URL}${player.current_rank_image}`}
+                                    alt={player.current_rank}
+                                    className="w-8 h-8 object-contain"
+                                    title={player.current_rank}
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                />
+                            ) : null}
+                            <span className={`text-text-tertiary text-xs ${player.current_rank_image ? 'hidden' : ''}`}>
+                                {player.current_rank || '—'}
                             </span>
                         </div>
 
@@ -235,17 +285,17 @@ const TeamTable = ({ players, currentPuuid, teamColor }: TeamTableProps) => {
                         </div>
 
                         {/* ADR */}
-                        <div className={`text-center font-medium ${adr >= 150 ? 'text-val' : 'text-text-primary'}`}>
+                        <div className="text-center font-medium text-text-primary">
                             {adr}
                         </div>
 
                         {/* HS% */}
-                        <div className={`text-center font-medium ${hs >= 25 ? 'text-val' : 'text-text-primary'}`}>
+                        <div className="text-center font-medium text-text-primary">
                             {hs}%
                         </div>
 
                         {/* ACS */}
-                        <div className={`text-center font-bold ${acs >= 200 ? 'text-val' : 'text-text-primary'}`}>
+                        <div className="text-center font-bold text-text-primary">
                             {acs}
                         </div>
                     </div>
