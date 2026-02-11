@@ -402,52 +402,51 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
 
                                             return (
                                                 <div key={date}>
-                                                    {/* Date Summary Header - aligned with match rows */}
-                                                    <div className="flex items-center gap-8 p-4 mb-2 bg-surface-200 rounded-r-lg border border-surface-300 border-l-4 border-l-transparent">
+                                                    <div className="flex items-center gap-4 md:gap-6 p-4 mb-2 bg-surface-200 rounded-r-lg border border-surface-300 border-l-4 border-l-transparent">
                                                         {/* Agent icon placeholder - matches w-14 in match row */}
-                                                        <div className="w-14 flex-shrink-0 flex items-center justify-center">
-                                                            <span className="text-2xl font-bold text-text-primary">{dateMatches.length}</span>
+                                                        <div className="w-12 md:w-14 flex-shrink-0 flex items-center justify-center">
+                                                            <span className="text-xl md:text-2xl font-bold text-text-primary">{dateMatches.length}</span>
                                                         </div>
                                                         {/* Map info placeholder - matches w-32 ml-2 in match row */}
-                                                        <div className="flex-shrink-0 w-32 ml-2">
+                                                        <div className="flex-shrink-0 w-24 md:w-32 ml-0 md:ml-2">
                                                             <div className="text-text-primary font-bold text-lg">{date}</div>
                                                             <div className="text-text-tertiary text-xs">Matches</div>
                                                         </div>
                                                         {/* Rank icon spacer - matches w-14 in match row */}
-                                                        <div className="flex-shrink-0 w-14" />
+                                                        <div className="flex-shrink-0 w-10 md:w-14 hidden sm:block" />
                                                         {/* W/L aligned to score column - matches w-36 in match row */}
-                                                        <div className="flex-shrink-0 w-36 flex items-center justify-center">
+                                                        <div className="flex-shrink-0 w-28 md:w-36 flex items-center justify-center">
                                                             <div className="flex items-center gap-1">
-                                                                <span className="text-success font-black text-2xl">{wins}W</span>
-                                                                <span className="text-text-muted text-xl">//</span>
-                                                                <span className="text-loss font-black text-2xl">{losses}L</span>
+                                                                <span className="text-success font-black text-xl md:text-2xl">{wins}W</span>
+                                                                <span className="text-text-muted text-lg md:text-xl">//</span>
+                                                                <span className="text-loss font-black text-xl md:text-2xl">{losses}L</span>
                                                             </div>
                                                         </div>
                                                         {/* Result badge spacer - matches w-28 ml-8 in match row */}
-                                                        <div className="flex-shrink-0 w-28 ml-8" />
+                                                        <div className="flex-shrink-0 w-24 md:w-28 ml-2 md:ml-4" />
 
                                                         {/* Spacer to push stats right */}
                                                         <div className="flex-1" />
 
                                                         {/* Stats - aligned with match row stats */}
-                                                        <div className="flex items-center justify-end gap-2 flex-shrink-0 pr-4">
-                                                            <div className="text-center w-[80px]">
-                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">K/D</div>
-                                                                <div className={`text-xl font-black ${Number(avgKD) > 1 ? 'text-success' : Number(avgKD) < 1 ? 'text-loss' : 'text-text-primary'}`}>
+                                                        <div className="flex items-center justify-end gap-1 md:gap-2 flex-shrink-0 pr-2 md:pr-4">
+                                                            <div className="text-center w-[60px] md:w-[80px]">
+                                                                <div className="text-text-secondary text-[10px] md:text-xs uppercase tracking-wider">K/D</div>
+                                                                <div className={`text-lg md:text-xl font-black ${Number(avgKD) > 1 ? 'text-success' : Number(avgKD) < 1 ? 'text-loss' : 'text-text-primary'}`}>
                                                                     {avgKD}
                                                                 </div>
                                                             </div>
-                                                            <div className="text-center w-[80px]">
-                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">HS%</div>
-                                                                <div className="text-xl font-black text-text-primary">{avgHS}%</div>
+                                                            <div className="text-center w-[60px] md:w-[80px]">
+                                                                <div className="text-text-secondary text-[10px] md:text-xs uppercase tracking-wider">HS%</div>
+                                                                <div className="text-lg md:text-xl font-black text-text-primary">{avgHS}%</div>
                                                             </div>
-                                                            <div className="text-center w-[80px] hidden xl:block">
-                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">ADR</div>
-                                                                <div className="text-xl font-black text-text-primary">{avgADR}</div>
+                                                            <div className="text-center w-[60px] md:w-[80px] hidden xl:block">
+                                                                <div className="text-text-secondary text-[10px] md:text-xs uppercase tracking-wider">ADR</div>
+                                                                <div className="text-lg md:text-xl font-black text-text-primary">{avgADR}</div>
                                                             </div>
-                                                            <div className="text-center w-[80px]">
-                                                                <div className="text-text-secondary text-xs uppercase tracking-wider">ACS</div>
-                                                                <div className="text-xl font-black text-text-primary">{avgACS}</div>
+                                                            <div className="text-center w-[60px] md:w-[80px]">
+                                                                <div className="text-text-secondary text-[10px] md:text-xs uppercase tracking-wider">ACS</div>
+                                                                <div className="text-lg md:text-xl font-black text-text-primary">{avgACS}</div>
                                                             </div>
                                                         </div>
                                                         {/* Spacer for arrow */}

@@ -49,10 +49,10 @@ const MatchHistoryCard = ({
             whileHover={{ scale: 1.005, x: 2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             onClick={onClick}
-            className={`relative flex items-center gap-8 p-4 rounded-r-lg border-l-4 ${resultBorderClass} ${resultBgClass} bg-surface-100 hover:bg-surface-200 transition-colors duration-200 cursor-pointer group`}
+            className={`relative flex items-center gap-4 md:gap-6 p-4 rounded-r-lg border-l-4 ${resultBorderClass} ${resultBgClass} bg-surface-100 hover:bg-surface-200 transition-colors duration-200 cursor-pointer group`}
         >
             {/* Agent Icon */}
-            <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface-300 flex-shrink-0 ring-1 ring-white/10 shadow-lg">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden bg-surface-300 flex-shrink-0 ring-1 ring-white/10 shadow-lg">
                 <img
                     src={agent_image}
                     alt={agent_name}
@@ -64,38 +64,38 @@ const MatchHistoryCard = ({
             </div>
 
             {/* Map & Mode Info */}
-            <div className="flex-shrink-0 w-32 ml-2">
-                <div className="text-text-primary font-bold text-xl leading-tight tracking-wide">{map}</div>
-                <div className="text-text-secondary text-base font-medium tracking-wider mt-0.5 uppercase opacity-90">{agent_name}</div>
+            <div className="flex-shrink-0 w-24 md:w-32 ml-0 md:ml-2">
+                <div className="text-text-primary font-bold text-lg md:text-xl leading-tight tracking-wide truncate">{map}</div>
+                <div className="text-text-secondary text-sm md:text-base font-medium tracking-wider mt-0.5 uppercase opacity-90 truncate">{agent_name}</div>
             </div>
 
             {/* Rank Icon */}
-            <div className="flex-shrink-0 w-14 flex items-center justify-start">
+            <div className="flex-shrink-0 w-10 md:w-14 flex items-center justify-start hidden sm:flex">
                 {current_rank_image ? (
                     <img
                         src={`${API_BASE_URL}${current_rank_image}`}
                         alt={current_rank || 'Rank'}
-                        className="w-12 h-12 object-contain"
+                        className="w-10 h-10 md:w-12 md:h-12 object-contain"
                         title={current_rank}
                     />
                 ) : (
-                    <div className="w-12 h-12" />
+                    <div className="w-10 h-10 md:w-12 md:h-12" />
                 )}
             </div>
 
-            {/* Score - Fixed width columns for proper alignment */}
-            <div className="flex items-center flex-shrink-0 w-36 justify-center rounded-lg py-1.5">
-                <span className={`w-10 text-right text-3xl font-black tabular-nums ${isWin ? 'text-success' : isDraw ? 'text-yellow-500' : 'text-text-primary'}`}>
+            {/* Score - Compact on small screens */}
+            <div className="flex items-center flex-shrink-0 w-28 md:w-36 justify-center rounded-lg py-1.5">
+                <span className={`w-8 md:w-10 text-right text-2xl md:text-3xl font-black tabular-nums ${isWin ? 'text-success' : isDraw ? 'text-yellow-500' : 'text-text-primary'}`}>
                     {roundsWon}
                 </span>
-                <span className="w-6 text-center text-text-muted/60 text-xl font-light px-1">:</span>
-                <span className={`w-10 text-left text-3xl font-black tabular-nums ${!isWin && !isDraw ? 'text-loss' : 'text-text-secondary'}`}>
+                <span className="w-4 md:w-6 text-center text-text-muted/60 text-lg md:text-xl font-light px-0.5">:</span>
+                <span className={`w-8 md:w-10 text-left text-2xl md:text-3xl font-black tabular-nums ${!isWin && !isDraw ? 'text-loss' : 'text-text-secondary'}`}>
                     {roundsLost}
                 </span>
             </div>
 
             {/* Result Badge & Position - Center aligned column */}
-            <div className="flex flex-col items-center gap-1.5 flex-shrink-0 w-28 justify-center ml-8">
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0 w-24 md:w-28 justify-center ml-2 md:ml-4">
                 <span
                     className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-widest w-full text-center shadow-lg border-2 ${isWin
                         ? 'bg-success/20 text-success border-success/50'
@@ -129,28 +129,28 @@ const MatchHistoryCard = ({
             <div className="flex-1" />
 
             {/* Stats Section - Fixed widths to align with header */}
-            <div className="flex items-center gap-2 flex-shrink-0 justify-end ml-auto pr-4">
-                <div className="text-center w-[80px]">
-                    <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">K/D</div>
-                    <div className={`text-xl font-black ${Number(kdRatio) > 1 ? 'text-success' : Number(kdRatio) < 1 ? 'text-loss' : 'text-text-primary'}`}>
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 justify-end ml-auto pr-2 md:pr-4">
+                <div className="text-center w-[60px] md:w-[80px]">
+                    <div className="text-[10px] md:text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">K/D</div>
+                    <div className={`text-lg md:text-xl font-black ${Number(kdRatio) > 1 ? 'text-success' : Number(kdRatio) < 1 ? 'text-loss' : 'text-text-primary'}`}>
                         {kdRatio}
                     </div>
                 </div>
 
-                <div className="text-center w-[80px]">
-                    <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">HS%</div>
-                    <div className="text-xl font-black text-text-primary">{hsPercent}%</div>
+                <div className="text-center w-[60px] md:w-[80px]">
+                    <div className="text-[10px] md:text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">HS%</div>
+                    <div className="text-lg md:text-xl font-black text-text-primary">{hsPercent}%</div>
                 </div>
 
                 {/* ADR - Uniform white color like HS% and ACS */}
-                <div className="text-center w-[80px] hidden xl:block">
-                    <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">ADR</div>
-                    <div className="text-xl font-black text-text-primary">{adr}</div>
+                <div className="text-center w-[60px] md:w-[80px] hidden xl:block">
+                    <div className="text-[10px] md:text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">ADR</div>
+                    <div className="text-lg md:text-xl font-black text-text-primary">{adr}</div>
                 </div>
 
-                <div className="text-center w-[80px]">
-                    <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">ACS</div>
-                    <div className="text-xl font-black text-text-primary">{acs}</div>
+                <div className="text-center w-[60px] md:w-[80px]">
+                    <div className="text-[10px] md:text-[11px] font-bold text-text-tertiary uppercase tracking-widest mb-1 opacity-80">ACS</div>
+                    <div className="text-lg md:text-xl font-black text-text-primary">{acs}</div>
                 </div>
             </div>
 
