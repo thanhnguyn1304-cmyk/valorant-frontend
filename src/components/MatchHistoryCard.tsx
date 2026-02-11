@@ -26,7 +26,7 @@ const MatchHistoryCard = ({
     map,
     roundsWon,
     roundsLost,
-    kda,
+
     kdRatio,
     result,
     fmt_pos,

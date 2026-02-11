@@ -221,7 +221,7 @@ const TeamTable = ({ players, currentPuuid, teamColor }: TeamTableProps) => {
                 const acs = player.acs || Math.round(player.combat_score / player.rounds_played);
                 const hs = player.hsPercent || Math.round((player.headshots / (player.headshots + player.othershots)) * 100) || 0;
                 const kda = player.kda || `${player.kills}/${player.deaths}/${player.assists}`;
-                const pos = player.fmt_pos || (player.position === 1 ? 'MVP' : player.position === 2 ? '2nd' : player.position === 3 ? '3rd' : `${player.position}th`);
+
 
                 return (
                     <div
