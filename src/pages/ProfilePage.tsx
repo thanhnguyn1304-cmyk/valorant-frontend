@@ -44,9 +44,15 @@ const ProfilePage = () => {
     const [isLoading, setIsLoading] = useState(true); // Start loading immediately
     const [matches, setMatches] = useState<MatchData[]>([]);
     const [puuid, setPuuid] = useState<string | null>(null);
+    const [region, setRegion] = useState<string | null>(null);
     const [selectedMatch, setSelectedMatch] = useState<MatchDetailData | null>(null);
     const [isMatchLoading, setIsMatchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Update state for Celery Polling
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateStatus, setUpdateStatus] = useState<string>('');
+    const [updateProgress, setUpdateProgress] = useState(0);
 
     // Derived riotId and tagline from the single 'id' param
     const lastHyphenIndex = id?.lastIndexOf('-') ?? -1;
@@ -56,8 +62,6 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!id || lastHyphenIndex === -1 || !riotId || !tagline) {
-                // Only set error if id is present but invalid. 
-                // If id is missing entirely, it's likely an initial render or router issue, but let's be safe.
                 if (id) {
                     setError("Invalid profile URL. Expected format: name-tag");
                     setIsLoading(false);
@@ -68,12 +72,6 @@ const ProfilePage = () => {
             setIsLoading(true);
             setError(null);
             try {
-                // 1. Get Player Info (to get PUUID)
-                // We need to decodeURIComponent because react-router might give us encoded strings or we might need to send them cleanly
-                // Actually fetching with encoded params in URL
-                // const rID = decodeURIComponent(riotId); // No longer needed, riotId is already decoded from the URL segment
-                // const tLine = decodeURIComponent(tagline); // No longer needed, tagline is already decoded from the URL segment
-
                 console.log(`Fetching profile for ${riotId}#${tagline}`);
                 const playerResponse = await fetch(`${API_BASE_URL}/api/v1/players/${encodeURIComponent(riotId)}/${encodeURIComponent(tagline)}`);
 
@@ -83,8 +81,9 @@ const ProfilePage = () => {
 
                 const playerData = await playerResponse.json();
                 setPuuid(playerData.puuid);
+                setRegion(playerData.region);
 
-                // 2. Get Matches
+                // 2. Get Matches (This is now instant via Redis/DB!)
                 console.log('Fetching matches for:', playerData.region, playerData.puuid);
                 const matchesResponse = await fetch(`${API_BASE_URL}/api/v1/matches/${playerData.region}/${playerData.puuid}`);
 
@@ -94,7 +93,6 @@ const ProfilePage = () => {
 
                 const matchesData = await matchesResponse.json();
 
-                // Map the response
                 const mappedMatches = matchesData.map((match: any) => ({
                     ...match,
                     match_id: match.match_id || match.id,
@@ -112,6 +110,57 @@ const ProfilePage = () => {
 
         fetchData();
     }, [id, riotId, tagline, lastHyphenIndex]);
+
+    const handleUpdateMatches = async () => {
+        if (!puuid || !region) return;
+        try {
+            setIsUpdating(true);
+            setUpdateStatus('Starting background sync...');
+            setUpdateProgress(0);
+
+            // 1. Trigger the background Celery task
+            const triggerResp = await fetch(`${API_BASE_URL}/api/v1/matches/${region}/${puuid}/update`, {
+                method: 'POST'
+            });
+            if (!triggerResp.ok) throw new Error("Failed to start update.");
+            const triggerData = await triggerResp.json();
+            const taskId = triggerData.task_id;
+
+            // 2. Poll for status every 1.5 seconds
+            const pollInterval = setInterval(async () => {
+                const statusResp = await fetch(`${API_BASE_URL}/api/v1/matches/update/status/${taskId}`);
+                const statusData = await statusResp.json();
+
+                if (statusData.state === 'SUCCESS') {
+                    clearInterval(pollInterval);
+                    setUpdateStatus('Sync complete!');
+                    setUpdateProgress(100);
+
+                    // 3. Refresh the matches list from the backend (which hits the cleared Redis cache)
+                    const matchesResponse = await fetch(`${API_BASE_URL}/api/v1/matches/${region}/${puuid}`);
+                    const matchesData = await matchesResponse.json();
+
+                    setMatches(matchesData.map((match: any) => ({ ...match, match_id: match.match_id || match.id })));
+
+                    setTimeout(() => setIsUpdating(false), 2000); // Hide progress bar after delay
+                } else if (statusData.state === 'PROGRESS' && statusData.meta) {
+                    setUpdateStatus(statusData.meta.status || 'Fetching from API...');
+                    if (statusData.meta.total) {
+                        setUpdateProgress(Math.round((statusData.meta.current / statusData.meta.total) * 100));
+                    }
+                } else if (statusData.state === 'FAILURE') {
+                    clearInterval(pollInterval);
+                    setUpdateStatus('Sync failed.');
+                    setTimeout(() => setIsUpdating(false), 3000);
+                }
+            }, 1500);
+
+        } catch (e) {
+            console.error("Update failed", e);
+            setUpdateStatus('Sync failed to start.');
+            setTimeout(() => setIsUpdating(false), 3000);
+        }
+    };
 
     const handleMatchClick = async (matchId: string) => {
         setIsMatchLoading(true);
@@ -157,6 +206,10 @@ const ProfilePage = () => {
                 isLoading={isLoading}
                 onBack={() => navigate('/')}
                 onMatchClick={handleMatchClick}
+                isUpdating={isUpdating}
+                updateStatus={updateStatus}
+                updateProgress={updateProgress}
+                onUpdateMatches={handleUpdateMatches}
             />
 
             {(selectedMatch || isMatchLoading) && (

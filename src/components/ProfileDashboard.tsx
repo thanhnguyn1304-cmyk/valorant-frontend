@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, RefreshCw, Loader2 } from 'lucide-react';
 import MatchHistoryCard from './MatchHistoryCard';
 import CoachReport from './CoachReport';
 
@@ -32,6 +32,10 @@ interface ProfileDashboardProps {
     isLoading: boolean;
     onBack: () => void;
     onMatchClick?: (matchId: string) => void;
+    isUpdating?: boolean;
+    updateStatus?: string;
+    updateProgress?: number;
+    onUpdateMatches?: () => void;
 }
 
 // Helper function to calculate time ago from start_time
@@ -68,7 +72,7 @@ const getTimeAgo = (startTime?: string | number | Date): string => {
     }
 };
 
-const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMatchClick }: ProfileDashboardProps) => {
+const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMatchClick, isUpdating, updateStatus, updateProgress, onUpdateMatches }: ProfileDashboardProps) => {
     // Calculate aggregate stats from matches
     const calculateStats = () => {
         if (matches.length === 0) {
@@ -224,19 +228,46 @@ const ProfileDashboard = ({ puuid, playerName, matches, isLoading, onBack, onMat
             {/* Navigation Tabs */}
             <div className="relative z-10 border-b border-surface-300 bg-surface-100/95 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto px-6">
-                    <nav className="flex gap-1">
-                        <button className="px-4 py-3 text-sm font-medium text-val border-b-2 border-val">
-                            Overview
-                        </button>
-                        <button className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                            Matches
-                        </button>
-                        <button className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                            Agents
-                        </button>
-                        <button className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                            Maps
-                        </button>
+                    <nav className="flex items-center justify-between w-full">
+                        <div className="flex gap-1">
+                            <button className="px-4 py-3 text-sm font-medium text-val border-b-2 border-val">
+                                Overview
+                            </button>
+                            <button className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                                Matches
+                            </button>
+                            <button className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors hidden sm:block">
+                                Agents
+                            </button>
+                        </div>
+
+                        <div className="flex items-center">
+                            {!isUpdating ? (
+                                <button
+                                    onClick={onUpdateMatches}
+                                    className="flex items-center gap-2 text-sm font-bold text-val hover:text-val-light hover:bg-val/10 px-4 py-2 rounded-lg transition-colors border border-val/20"
+                                >
+                                    <RefreshCw className="w-4 h-4" /> Sync Matches
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-4 px-4 py-2 bg-surface-200 rounded-lg border border-surface-300">
+                                    <div className="flex flex-col items-end min-w-[120px]">
+                                        <span className="text-xs text-text-secondary font-medium">{updateStatus}</span>
+                                        <div className="w-full h-1.5 bg-surface-300 rounded-full overflow-hidden mt-1.5">
+                                            <div
+                                                className="h-full bg-val transition-all duration-300 relative"
+                                                style={{ width: `${updateProgress}%` }}
+                                            >
+                                                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-8 h-8 rounded-full bg-val/10 flex items-center justify-center">
+                                        <Loader2 className="w-4 h-4 text-val animate-spin" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </div>
             </div>
