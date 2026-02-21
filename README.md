@@ -1,73 +1,41 @@
-# React + TypeScript + Vite
+# ValorTracker - Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ValorTracker is an ultimate statistical and strategic companion for VALORANT players. This repository houses the React frontend that interfaces with the FastAPI backend.
 
-Currently, two official plugins are available:
+## 🎨 Visual Identity
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Designed with the "Divine Duality" theme, the UI captures the essence of sleek, modern gaming aesthetics.
 
-## React Compiler
+*   **Cybernetic Dark Mode:** Deep `#111111` surfaces interlaced with `#FF4655` (VALORANT Red) accents.
+*   **Radiant Gradients:** Extensive use of `radial-gradient` backgrounds to create a deep, glowing, futuristic atmosphere.
+*   **Micro-Animations:** Fluid state transitions, hover elevations, and dynamic pulse effects to make the interface feel alive and responsive.
+*   **Glassmorphism:** Semi-transparent panels with backdrop filtering (`backdrop-blur-md`) to ensure legible data over rich backgrounds.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 💻 Tech Stack
 
-## Expanding the ESLint configuration
+*   **Core:** React 18, Vite
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS (Custom thematic variables)
+*   **Routing:** React Router v6
+*   **Icons:** Lucide-React
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚙️ Environment Configuration
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+To connect this frontend to the FastAPI backend, you must define the `VITE_API_BASE_URL` in your `.env` or Vercel Environment Variables.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```env
+# Local Development
+VITE_API_BASE_URL=http://localhost:8000
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Production Deployment
+VITE_API_BASE_URL=https://valortracker.onrender.com
 ```
+*Note: Ensure there is **NO** trailing slash in the production URL.*
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Deployment (Vercel)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This frontend is configured and optimized for zero-config deployments on **Vercel**.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1.  Push the code to the `main` branch.
+2.  Vercel automatically triggers a build via `npm run build`.
+3.  Client-side routing is strictly handled via the included `vercel.json` rewrite rules to prevent 404 errors on deep profile nested links.
